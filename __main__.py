@@ -1,16 +1,9 @@
 import pandas as pd
-from dataclasses import dataclass, field
 import click
-from pandas.core.frame import DataFrame
 
+from ai import Problem, gen_backtrace_function
+from tree import build_root
 
-@dataclass
-class Tree:
-    data: list = field(default_factory=[], init=False)
-    children: list = field(default_factory=[], init=False)
-
-def createRoot(board: DataFrame) -> Tree:
-    return Tree()
 
 @click.command()
 @click.option('-filename', default="", help="Name of the file to read")
@@ -18,8 +11,17 @@ def n_queens(**kwargs):
     filename = kwargs.get('filename', None)
     try:
         board: pd.DataFrame = pd.read_csv(filename, header=None)
-        item = createRoot(board=board)
+        root = build_root(board.values.tolist())
+        if root == None:
+            raise Exception("Initial Queen Not Specified")
+
+        problem = Problem(n=len(board.columns), board=root)
+        backtrace = gen_backtrace_function(problem)
+        backtrace(root)
+
     except Exception as e:
         print(e)
         return
+
+
 n_queens()
