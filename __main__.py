@@ -15,7 +15,7 @@ def n_queens(**kwargs):
         if root == None:
             raise Exception("Initial Queen Not Specified")
 
-        problem = Problem(n=len(board.columns), board=root)
+        problem = Problem(n=len(board.columns), init_board=root)
         backtrace = gen_backtrace_function(problem)
         backtrace(root)
 
