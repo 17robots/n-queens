@@ -8,13 +8,13 @@ class Tree:
     children: List = field(init=False, default_factory=list)
 
 
-def build_root(arrs: list) -> Tree or None:
+def build_root(arrs: list) -> List[Tuple] or None:
     root = None
     for i in range(0, len(arrs), 1):
         for j in range(0, len(arrs[i]), 1):
             if arrs[i][j] == 1:
                 if root == None:
-                    root = Tree(board=[(i, j)])
+                    root = [(i, j)]
                 else:
                     raise Exception("Multiple Queens Specified In File")
 

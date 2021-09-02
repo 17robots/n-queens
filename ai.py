@@ -1,23 +1,33 @@
 from dataclasses import dataclass
-from typing import Tuple
-from tree import Tree
+from typing import Tuple, List
+import logging
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+file_handler = logging.FileHandler(filename='log.txt')
+file_handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter(
+    '%(asctime)s %(levelname)s %(message)s')
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
+
+Board = List[Tuple]
 
 @dataclass
 class Problem:
     n: int
-    init_board: Tree
+    init_board: Board
 
 
 def isValidRectangle(x: Tuple, y: Tuple):
-    return abs(abs(x[0] - y[0]) - abs(x[1] - y[1])) > 1
+    return abs(abs(x[0] - y[0]) - abs(x[1] - y[1])) > 0
 
 
-def accept(P: Problem, c: Tree):
-    if len(c.board) == P.n:
-        if P.init_board[0] in c.board:
-            for x in c.board:
-                for y in c.board:
+def accept(P: Problem, c: Board):
+    if len(c) == P.n:
+        if P.init_board[0] in c:
+            for x in c:
+                for y in c:
                     if x == y:
                         continue
                     if not isValidRectangle(x, y):
@@ -28,10 +38,10 @@ def accept(P: Problem, c: Tree):
 
 
 # reject if any of the queens attack each other
-def reject(P: Problem, c: Tree):
-    if P.init_board[0] in c.board:
-        for x in c.board:
-            for y in c.board:
+def reject(P: Problem, c: Board):
+    if P.init_board[0] in c:
+        for x in c:
+            for y in c:
                 if x == y:
                     continue
                 if not isValidRectangle(x, y):
@@ -40,26 +50,48 @@ def reject(P: Problem, c: Tree):
     return True
 
 
-def output(P: Problem, c):
-    pass
+def output(P: Problem, c: Board):
+    with open('output.csv', 'w') as f:
+        for i in range(0, P.n - 1, 1):
+            for j in range(0, P.n - 1, 1):
+                f.write(f"{1 if (i, j) in c else 0},")
+            f.write('\n')
 
 
 def first(P: Problem, c):
-    return None
+    returnBoard = c
+    for i in range(0, P.n - 1, 1):
+        for j in range(0, P.n - 1, 1):
+            queen = (i, j)
+            if queen not in P.init_board:
+                return returnBoard + [queen]
 
 
-def next(P: Problem, s):
-    return None
+
+def nextBoard(P: Problem, s: Board):
+    newBoard = s
+    if len(s) == P.n:
+        if s[:-1][0] >= P.n - 1 and s[:-1][1] >= P.n - 1: return None
+    queen = newBoard.pop() # we will be moving this queen
+    newQueen = (1 if queen[1] + 1 >= P.n - 1 else queen[0], 0 if queen[1] + 1 >= P.n - 1 else queen[1] + 1)
+    while newQueen in s:
+        newQueen = (1 if newQueen[1] + 1 >= P.n - 1 else newQueen[0], 0 if newQueen[1] + 1 >= P.n - 1 else newQueen[1] + 1)    
+
+    return newBoard + [newQueen]
 
 
-def gen_backtrace_function(problem: Problem):
+
+def backtrace_template(problem: Problem):
     didFind = False
 
     def backtrace(c):
         nonlocal didFind
+        logger.debug(f'Board State: {c}')
         if reject(problem, c):
+            logger.debug(f"rejecting {c}")
             return
         if accept(problem, c):
+            logger.debug(f"accepting {c}")
             if not didFind:
                 output(problem, c)
                 didFind = True
@@ -67,7 +99,9 @@ def gen_backtrace_function(problem: Problem):
         s = first(problem, c)
         while s != None:
             backtrace(s)
-            s = next(problem, s)
+            s = nextBoard(problem, s)
+        if not didFind:
+            print("No Solution")
 
     return backtrace
 

@@ -1,7 +1,7 @@
 import pandas as pd
 import click
 
-from ai import Problem, gen_backtrace_function
+from ai import Problem, backtrace_template, first, nextBoard
 from tree import build_root
 
 
@@ -16,7 +16,7 @@ def n_queens(**kwargs):
             raise Exception("Initial Queen Not Specified")
 
         problem = Problem(n=len(board.columns), init_board=root)
-        backtrace = gen_backtrace_function(problem)
+        backtrace = backtrace_template(problem)
         backtrace(root)
 
     except Exception as e:
