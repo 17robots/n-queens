@@ -1,5 +1,6 @@
 import pandas as pd
 import click
+import traceback
 
 from ai import Problem, backtrace_template, first, nextBoard
 from tree import build_root
@@ -20,7 +21,8 @@ def n_queens(**kwargs):
         backtrace(root)
 
     except Exception as e:
-        print(e)
+        # print(e)
+        traceback.print_exc()
         return
 
 
