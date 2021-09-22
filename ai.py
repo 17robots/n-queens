@@ -1,96 +1,41 @@
-from dataclasses import dataclass
 from typing import Tuple, List
 
 Board = List[Tuple]
+Problem = (int, Board)
 
-
-@dataclass
-class Problem:
-    n: int
-    init_board: Board
-
-
-def isValidRectangle(x: Tuple, y: Tuple):
-    if x[0] == y[0]:
+def isValidRectangle(queen1: Tuple, queen2: Tuple):
+    if queen1[0] == queen2[0] or queen1[1] == queen2[1]:
         return False
-    if x[1] == y[1]:
-        return False
-    return not abs((x[1] - y[1]) / (x[0] - y[0])) == 1
-
-
-def accept(P: Problem, c: Board):
-    return len(c) == P.n and P.init_board[0] in c
-
-
-# reject if any of the queens attack each other
-def reject(P: Problem, c: Board):
-    if P.init_board[0] in c:
-        for x in c:
-            for y in c:
-                if x == y:
-                    continue
-                if not isValidRectangle(x, y):
-                    return True
-        return False
-    return True
-
+    return not abs((queen1[1] - queen2[1]) / (queen1[0] - queen2[0])) == 1
 
 def output(P: Problem, c: Board):
     with open('output.csv', 'w') as f:
-        for i in range(0, P.n, 1):
-            for j in range(0, P.n, 1):
-                f.write(f"{1 if (i, j) in c else 0},")
+        for i in range(P[0]):
+            for j in range(P[0]):
+                f.write(f"{str(int((i, j) in c)) + (',' if j < P[0] - 1 else '')}")
             f.write('\n')
 
+def isSafe(row, col, board):
+    for queen in board:
+        if not isValidRectangle((row,col), queen):
+            return False
+    return True
 
-def first(P: Problem, c):
-    returnBoard = c
-    for i in range(0, P.n - 1, 1):
-        for j in range(0, P.n - 1, 1):
-            queen = (i, j)
-            if queen not in P.init_board:
-                return returnBoard + [queen]
-
-
-def nextBoard(P: Problem, s: Board):
-    newBoard = s
-    queen = newBoard.pop()  # we will be moving this queen
-    newQueen = (queen[0] + 1 if queen[1] + 1 >= P.n else queen[0],
-                0 if queen[1] + 1 >= P.n else queen[1] + 1)
-    if newQueen[0] >= P.n:
-        return None
-    while newQueen in s:
-        newQueen = (newQueen[0] + 1 if newQueen[1] + 1 >= P.n - 1 else newQueen[0],
-                    0 if newQueen[1] + 1 >= P.n - 1 else newQueen[1] + 1)
-    return newBoard + [newQueen]
-
-
-def backtrace_template_faster(problem: Problem):
-    didFind - False
-    pass
-
-
-def backtrace_template(problem: Problem):
-    didFind = False
-
-    def backtrace(c):
-        nonlocal didFind
-        if reject(P=problem, c=c):
-            return
-        if accept(P=problem, c=c):
+didFind = False
+def backtrace(p: Problem, col: int, board: Board):
+        if col >= p[0]:
+            global didFind
             if not didFind:
-                output(P=problem, c=c)
+                if p[0] < 25:
+                    output(P=p, c=board)
+                print(f'Solution Found: {board}')
                 didFind = True
-            return
-        s = first(P=problem, c=c)
-        while s != None:
-            if didFind:
-                break
-            backtrace(c=s)
-            s = nextBoard(P=problem, s=s)
-        if c == problem.init_board and not didFind:
-            print('no solution')
-    return backtrace
-
-# c is solution
-# P is problem
+            return True
+        else:
+            for i in range(p[0]):
+                if (i,col) in board:
+                    return backtrace(p=p, board=board, col=col+1)
+                if isSafe(row=i, col=col, board=board):
+                    if backtrace(p=p, board=board + [(i, col)], col=col+1):
+                        return True
+            return False
